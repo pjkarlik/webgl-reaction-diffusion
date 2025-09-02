@@ -11,6 +11,8 @@ uniform vec3 u_mouse;
 uniform vec2 u_resolution;
 uniform float u_time;
 uniform float u_frame;
+uniform float u_tone;
+uniform float u_const;
 uniform sampler2D iChannel0;
 
 #define R           u_resolution
@@ -25,12 +27,13 @@ vec4 tx(in vec2 p){ return texture(iChannel0, p); }
 float getGradient(vec2 uv) {return (MAX - tx(uv).y) / (MAX - MIN);}
 float getOff(vec2 uv) {return (MAX - tx(uv).x) / (MAX - MIN);}
 
-//@iq
-vec3 hue(float t){ 
-    const vec3 c = vec3(2,1,0);
-    return .5 + .45*cos(4.*t*(c+vec3(.075,.5,.95))); 
-}
 
+//@iq of hsv2rgb
+vec3 hsv( in vec3 c ) {
+    vec3 rgb = clamp( abs(mod(c.x*6.0+vec3(0.0,4.0,2.0),6.0)-3.0)-1.0, 0.0, 1.0 );
+	return c.z * mix( vec3(1.0), rgb, c.y);
+}
+  
 void main() {
   
   vec3 color=vec3(0);
@@ -41,12 +44,12 @@ void main() {
     } else {
         float v = getGradient(uv);
         float z = getOff(uv);
-        v = smoothstep(.55,.9,v);
-        float bv = smoothstep(.1,.5,min(v,z));
-        color = vec3(v,v,v)*hue((z*.8)+uv.x*.2+(T*.08));
+        float px = fwidth(uv.x);
+        v = smoothstep(u_const-px,-px,v);
+        color = vec3(v,v,v)*hsv(vec3((z*1.1)+u_tone,.9,.4));
     }
     
-    color = clamp(color,vec3(0),vec3(1));
+    color = pow(color,vec3(.4545));
     fragColor = vec4(color,1);
 }`;
 

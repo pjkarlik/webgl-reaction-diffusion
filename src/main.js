@@ -21,29 +21,39 @@ These values are constants that determine the rate of diffusion for each chemica
 
 let then = 0;
 let frameCount = 0;
+let demo = 0;
 
 const settings = {
   // main RD shader
-  bF: 0.09, //0.0438
-  bK: 0.0635, //values low
+  bF: 0.054, //0.0438
+  bK: 0.064, //values low
   bDa: 1,
-  bDb: 0.23,
+  bDb: 0.232,
+  tone: 0.51,
+  const: 1.1,
   clearFrameCount: function () {
     frameCount = 0;
+  },
+  demoMode: function () {
+    if (demo == 0) {
+      demo = 1;
+    } else {
+      demo = 0;
+    }
   }
 };
 
 const gui = new dat.GUI();
 
 const shaderB = gui.addFolder("Shader B");
-shaderB.add(settings, "bF", 0.0, .2).step(0.0001).name("F");
-shaderB.add(settings, "bK", 0.0, .2).step(0.0001).name("K");
+shaderB.add(settings, "bF", 0.0, 0.15).step(0.0001).name("F");
+shaderB.add(settings, "bK", 0.0, 0.15).step(0.0001).name("K");
 shaderB.add(settings, "bDa", 0.0, 1.0).step(0.0001).name("Da");
 shaderB.add(settings, "bDb", 0.0, 1.0).step(0.0001).name("Db");
-
-
-gui.add(settings, "clearFrameCount").name("Reset");
-
+shaderB.add(settings, "const", 0, 4).step(0.0001).name("Constrast");
+shaderB.add(settings, "tone", 0.0, 1.0).step(0.0001).name("Hue");
+gui.add(settings, "clearFrameCount").name("Clear Screen");
+gui.add(settings, "demoMode").name("Demo Mode");
 shaderB.close();
 
 let viewWidth = window.innerWidth;
@@ -119,12 +129,13 @@ function render(time) {
   tmouse[1] = tmouse[1] - (tmouse[1] - umouse[1]) * factor;
   tmouse[2] = mouse.drag ? 1 : -1;
 
-  const simUniforms = {
+ const simUniforms = {
     u_resolution: [viewWidth, viewHeight],
     iChannel0: readBuffer.attachments[0], // previous state
     u_time: time * 0.5,
     u_frame: frameCount,
     u_mouse: tmouse,
+    u_demo: demo,
     u_gui: [settings.bF, settings.bK, settings.bDa, settings.bDb],
     iDate: [0, 0, 0, time] // simple fallback
   };
@@ -150,6 +161,8 @@ function render(time) {
     iChannel0: readBuffer.attachments[0], // latest sim state
     u_time: time * 0.5,
     u_mouse: tmouse,
+    u_tone: settings.tone,
+    u_const: settings.const,
     u_frame: frameCount
   };
 
