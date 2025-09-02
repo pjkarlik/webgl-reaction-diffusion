@@ -6,7 +6,6 @@ import Mouse from "./mouse.js";
 
 import vertexShader from "./shaders/vertexShader.js";
 import mainShader from "./shaders/mainShader.js";
-import passoneShader from "./shaders/passoneShader.js";
 import passtwoShader from "./shaders/passtwoShader.js";
 
 /**
@@ -25,15 +24,10 @@ let frameCount = 0;
 
 const settings = {
   // main RD shader
-  bF: 0.0938, //0.0438
+  bF: 0.09, //0.0438
   bK: 0.0635, //values low
   bDa: 1,
   bDb: 0.23,
-  //second buffuer shader
-  aF: 0.5592,
-  aK: 0.5484,
-  aDa: 1,
-  aDb: 0.68,
   clearFrameCount: function () {
     frameCount = 0;
   }
@@ -42,21 +36,15 @@ const settings = {
 const gui = new dat.GUI();
 
 const shaderB = gui.addFolder("Shader B");
-shaderB.add(settings, "bF", 0.0, 1.0).step(0.0001).name("F");
-shaderB.add(settings, "bK", 0.0, 1.0).step(0.0001).name("K");
-shaderB.add(settings, "bDa", 0.0, 2.0).step(0.0001).name("Da");
+shaderB.add(settings, "bF", 0.0, .2).step(0.0001).name("F");
+shaderB.add(settings, "bK", 0.0, .2).step(0.0001).name("K");
+shaderB.add(settings, "bDa", 0.0, 1.0).step(0.0001).name("Da");
 shaderB.add(settings, "bDb", 0.0, 1.0).step(0.0001).name("Db");
 
-const shaderA = gui.addFolder("Shader A");
-shaderA.add(settings, "aF", 0.0, 1.0).step(0.0001).name("F");
-shaderA.add(settings, "aK", 0.0, 1.0).step(0.0001).name("K");
-shaderA.add(settings, "aDa", 0.0, 2.0).step(0.0001).name("Da");
-shaderA.add(settings, "aDb", 0.0, 1.0).step(0.0001).name("Db");
 
 gui.add(settings, "clearFrameCount").name("Reset");
 
-shaderB.open();
-shaderA.close();
+shaderB.close();
 
 let viewWidth = window.innerWidth;
 let viewHeight = window.innerHeight;
@@ -73,7 +61,7 @@ let umouse = [gl.canvas.width / 2, gl.canvas.height / 2, 0, 0];
 let tmouse = umouse;
 
 // --- Compile Shaders ---
-const simInfoA = twgl.createProgramInfo(gl, [vertexShader, passoneShader]);
+const simInfoA = twgl.createProgramInfo(gl, [vertexShader, passtwoShader]);
 const simInfoB = twgl.createProgramInfo(gl, [vertexShader, passtwoShader]);
 const displayInfo = twgl.createProgramInfo(gl, [vertexShader, mainShader]);
 
@@ -141,8 +129,10 @@ function render(time) {
     iDate: [0, 0, 0, time] // simple fallback
   };
 
+
   // Alternate Shader A / Shader B
   const simProgram = frameCount % 2 === 0 ? simInfoA : simInfoB;
+  const simGUI = frameCount % 2 === 0 ? [settings.aF, settings.aK, settings.aDa, settings.aDb] : [settings.bF, settings.bK, settings.bDa, settings.bDb];
   gl.useProgram(simProgram.program);
   twgl.setBuffersAndAttributes(gl, simProgram, bufferInfo);
   twgl.setUniforms(simProgram, simUniforms);
@@ -160,8 +150,7 @@ function render(time) {
     iChannel0: readBuffer.attachments[0], // latest sim state
     u_time: time * 0.5,
     u_mouse: tmouse,
-    u_frame: frameCount,
-    u_gui: [settings.aF, settings.aK, settings.aDa, settings.aDb]
+    u_frame: frameCount
   };
 
   gl.useProgram(displayInfo.program);

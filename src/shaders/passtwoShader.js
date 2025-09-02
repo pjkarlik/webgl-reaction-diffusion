@@ -55,9 +55,9 @@ void main()
     vec2 uv = gl_FragCoord.xy /  max(u_resolution.x,u_resolution.y);
     vec2 vuv = (2.*gl_FragCoord.xy-u_resolution.xy) / max(u_resolution.x,u_resolution.y);
     vec3 colour = vec3(0);
-    vuv*=rot(T*.02);
+
     if (u_frame < 2.) {
-         colour = vec3(random(uv+T));
+         colour = vec3(random((uv)));
     } else {
 
         vec2 val, laplacian;
